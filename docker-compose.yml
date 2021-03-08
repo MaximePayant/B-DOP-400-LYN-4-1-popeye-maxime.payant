@@ -1,0 +1,90 @@
+#
+#EPITECH PROJECT, 2021
+#Tek2
+#File description:
+#docker-compose.yml
+#
+
+version: "3.3"
+
+
+##===SERVICES===========>
+
+services:
+
+  poll:
+    restart: always
+    build: poll
+    ports:
+      - "4000:80"
+    environment:
+      - REDIS_HOST=redis
+    networks:
+      - poll_tier
+
+  redis:
+    restart: always
+    image: redis:6.2-alpine
+    expose:
+      - "6379"
+    networks:
+      - poll_tier
+      - back_tier
+
+  worker:
+    restart: always
+    depends_on:
+      - redis
+      - db
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=db
+    build: worker
+    networks:
+      - back_tier
+
+  result:
+    restart: always
+    depends_on:
+      - db
+    build: result
+    environment:
+      - PORT=80
+      - DB_HOST=db
+    ports:
+      - "5001:80"
+    networks:
+      - result_tier
+
+  db:
+    restart: always
+    image: postgres:10-alpine
+    environment:
+      - POSTGRES_PASSWORD=password
+    networks:
+      - result_tier
+      - back_tier
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+
+##======================>
+
+
+##===VOLUMES===========>
+
+volumes:
+  db-data:
+
+##======================>
+
+
+##===NETWORKS===========>
+
+networks:
+  poll_tier:
+  result_tier:
+  back_tier:
+
+##======================>
