@@ -12,37 +12,45 @@ version: "3.3"
 
 services:
 
+## -- Poll ------------->
   poll:
     restart: always
     build: poll
+
     ports:
       - "4000:80"
     environment:
       - REDIS_HOST=redis
     networks:
-      - poll_tier
+      - poll-tier
 
+
+## -- Redis ------------>
   redis:
     restart: always
     image: redis:6.2-alpine
+
     expose:
       - "6379"
     networks:
-      - poll_tier
-      - back_tier
+      - poll-tier
+      - back-tier
 
+## -- Worker ----------->
   worker:
     restart: always
     depends_on:
       - redis
       - db
+
     environment:
       - REDIS_HOST=redis
       - DB_HOST=db
     build: worker
     networks:
-      - back_tier
+      - back-tier
 
+## -- Result ----------->
   result:
     restart: always
     depends_on:
@@ -54,16 +62,17 @@ services:
     ports:
       - "5001:80"
     networks:
-      - result_tier
+      - result-tier
 
+## -- DataBase --------->
   db:
     restart: always
     image: postgres:10-alpine
     environment:
       - POSTGRES_PASSWORD=password
     networks:
-      - result_tier
-      - back_tier
+      - result-tier
+      - back-tier
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -83,8 +92,8 @@ volumes:
 ##===NETWORKS===========>
 
 networks:
-  poll_tier:
-  result_tier:
-  back_tier:
+  poll-tier:
+  result-tier:
+  back-tier:
 
 ##======================>
