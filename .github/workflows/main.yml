@@ -1,0 +1,99 @@
+name: popeye-CI
+
+on:
+  push:
+    branches: 
+      - master
+      - dev
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  poll:
+    runs-on: ubuntu-20.04
+    container:
+      image: epitechcontent/epitest-docker
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Get new content
+        uses: actions/checkout@v2
+        
+      - name: Install docker
+        run: |
+          yes | sudo dnf -y install dnf-plugins-core
+          sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+          yes | sudo dnf -y install docker-ce docker-ce-cli containerd.io
+      - name: Build docker's image
+        run: cd poll && docker build . -t test/poll > poll_log.txt
+        
+      - name: Check if image as been built
+        run: docker images | grep test/poll
+
+      - name: Create artefact
+        continue-on-error: true
+        uses: actions/upload-artifact@v2
+        with:
+          name: poll_log
+          path: poll/poll_log.txt
+
+  result:
+    runs-on: ubuntu-20.04
+    container:
+      image: epitechcontent/epitest-docker
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Get new content
+        uses: actions/checkout@v2
+        
+      - name: Install docker
+        run: |
+          yes | sudo dnf -y install dnf-plugins-core
+          sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+          yes | sudo dnf -y install docker-ce docker-ce-cli containerd.io
+      - name: Build docker's image
+        run: cd result && docker build . -t test/result > result_log.txt
+        
+      - name: Check if image as been built
+        run: docker images | grep test/result
+
+      - name: Create artefact
+        continue-on-error: true
+        uses: actions/upload-artifact@v2
+        with:
+          name: result_log
+          path: result/result_log.txt
+          
+  worker:
+    runs-on: ubuntu-20.04
+    container:
+      image: epitechcontent/epitest-docker
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Get new content
+        uses: actions/checkout@v2
+        
+      - name: Install docker
+        run: |
+          yes | sudo dnf -y install dnf-plugins-core
+          sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+          yes | sudo dnf -y install docker-ce docker-ce-cli containerd.io
+      - name: Build docker's image
+        run: cd worker && docker build . -t test/worker > worker_log.txt
+          
+      - name: Check if image as been built
+        run: docker images | grep test/worker
+
+      - name: Create artefact
+        continue-on-error: true
+        uses: actions/upload-artifact@v2
+        with:
+          name: worker_log
+          path: worker/worker_log.txt
+          
+          
